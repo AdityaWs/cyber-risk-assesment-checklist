@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Risk Assessment Checklist — PBAI</title>
+<style>
+  :root {
+    --green: #639922; --green-bg: #EAF3DE; --green-dk: #173404;
+    --amber: #BA7517; --amber-bg: #FAEEDA; --amber-dk: #412402;
+    --orange: #D85A30; --orange-bg: #FAECE7; --orange-dk: #4A1B0C;
+    --red: #A32D2D; --red-bg: #FCEBEB; --red-dk: #501313;
+    --blue-bg: #E6F1FB; --blue-dk: #0C447C;
+    --gray-bg: #F1EFE8; --gray-dk: #444441; --gray-mid: #888780;
+    --amber-badge: #FAC775; --amber-badge-dk: #633806;
+    --border: #e0ddd5;
+    --text: #1a1a1a; --text-sec: #555; --text-ter: #999;
+    --surface: #ffffff; --page: #f7f5f0;
+    --radius: 10px; --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--page); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+  /* HEADER */
+  .top-bar { background: #1a2540; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .top-bar .logo { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .top-bar .sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 1px; }
+  .shield { font-size: 22px; }
+
+  /* LAYOUT */
+  .container { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  /* SUMMARY CARDS */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; box-shadow: var(--shadow); }
+  .metric .mlabel { font-size: 11px; color: var(--text-sec); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .metric .mval { font-size: 24px; font-weight: 600; color: var(--text); }
+  .metric .msub { font-size: 11px; color: var(--text-ter); margin-top: 2px; }
+
+  /* GLOBAL RISK BAR */
+  .risk-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+  .risk-panel-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .risk-title { font-size: 13px; font-weight: 500; color: var(--text-sec); }
+  .risk-verdict { font-size: 15px; font-weight: 600; }
+  .risk-sub { font-size: 12px; color: var(--text-sec); margin-top: 5px; }
+  .bar-wrap { height: 12px; border-radius: 6px; background: #eee; overflow: hidden; margin-bottom: 5px; }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width 0.4s ease, background 0.4s; width: 0%; background: #ccc; }
+  .bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-ter); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab-btn { font-size: 12px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); color: var(--text-sec); cursor: pointer; transition: all 0.15s; }
+  .tab-btn:hover { border-color: #999; }
+  .tab-btn.active { background: #1a2540; color: #fff; border-color: #1a2540; font-weight: 500; }
+
+  /* SECTION CARDS */
+  .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  .sec-progress { height: 3px; background: #eee; }
+  .sec-progress-fill { height: 100%; transition: width 0.3s, background 0.3s; width: 0%; }
+  .sec-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; user-select: none; transition: background 0.1s; }
+  .sec-header:hover { background: #fafaf8; }
+  .sec-left { display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: wrap; }
+  .sec-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+  .bh { background: var(--amber-badge); color: var(--amber-badge-dk); }
+  .bm { background: var(--blue-bg); color: var(--blue-dk); }
+  .bl { background: var(--gray-bg); color: var(--gray-dk); }
+  .sec-score { font-size: 13px; font-weight: 600; white-space: nowrap; min-width: 36px; text-align: right; color: var(--text-ter); }
+  .chevron { font-size: 16px; color: var(--text-ter); transition: transform 0.2s; flex-shrink: 0; line-height: 1; }
+  .chevron.open { transform: rotate(180deg); }
+  .sec-body { display: none; border-top: 1px solid var(--border); }
+  .sec-body.open { display: block; }
+
+  /* QUESTIONS */
+  .q-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px; border-bottom: 1px solid #f0ede8; }
+  .q-row:last-child { border-bottom: none; }
+  .q-id { font-size: 10px; color: var(--text-ter); min-width: 40px; padding-top: 3px; font-family: monospace; }
+  .q-text { font-size: 12px; color: var(--text-sec); flex: 1; line-height: 1.5; }
+  .btn-group { display: flex; gap: 4px; flex-shrink: 0; }
+  .btn-ans { font-size: 11px; padding: 3px 10px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--text-sec); cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+  .btn-ans:hover { background: #f5f3ef; }
+  .btn-ya-active { background: var(--green-bg) !important; border-color: var(--green) !important; color: var(--green-dk) !important; font-weight: 600; }
+  .btn-tidak-active { background: var(--red-bg) !important; border-color: var(--red) !important; color: var(--red-dk) !important; font-weight: 600; }
+  .btn-na-active { background: var(--gray-bg) !important; border-color: var(--gray-mid) !important; color: var(--gray-dk) !important; font-weight: 600; }
+
+  /* BREAKDOWN TAB */
+  .breakdown-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); }
+  .breakdown-wrap h3 { font-size: 13px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
+  .sbr { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .sbr-label { font-size: 11px; width: 200px; flex-shrink: 0; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sbr-outer { flex: 1; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+  .sbr-inner { height: 100%; border-radius: 4px; transition: width 0.4s; }
+  .sbr-pct { font-size: 11px; width: 34px; text-align: right; color: var(--text-sec); font-weight: 500; }
+  .sbr-w { font-size: 10px; width: 30px; text-align: right; color: var(--text-ter); }
+
+  /* GUIDE TAB */
+  .guide-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  .guide-panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+  .guide-panel p { font-size: 12px; color: var(--text-sec); line-height: 1.8; margin-bottom: 10px; }
+  .guide-panel strong { color: var(--text); }
+  .guide-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 14px; }
+  .guide-table th { background: #f5f3ef; padding: 8px 12px; text-align: left; font-weight: 600; border: 1px solid var(--border); }
+  .guide-table td { padding: 8px 12px; border: 1px solid var(--border); color: var(--text-sec); vertical-align: top; }
+  .guide-table tr:nth-child(even) td { background: #fafaf8; }
+
+  /* PRINT / EXPORT */
+  .export-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .export-bar span { font-size: 12px; color: var(--text-sec); }
+  .btn-export { font-size: 12px; padding: 6px 14px; border: 1px solid #1a2540; border-radius: 6px; background: #1a2540; color: #fff; cursor: pointer; font-weight: 500; transition: opacity 0.15s; }
+  .btn-export:hover { opacity: 0.85; }
+  .btn-export.outline { background: transparent; color: #1a2540; }
+  .btn-export.outline:hover { background: #f0f2f8; }
+
+  /* FOOTER */
+  .footer { text-align: center; font-size: 11px; color: var(--text-ter); margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .sbr-label { width: 130px; }
+    .btn-ans { padding: 3px 7px; font-size: 10px; }
+    .q-id { min-width: 32px; }
+    .top-bar { padding: 12px 16px; }
+  }
+
+  /* PRINT */
+  @media print {
+    .top-bar { position: static; }
+    .tabs, .export-bar, .btn-export { display: none !important; }
+    .sec-body { display: block !important; }
+    .section-card { break-inside: avoid; box-shadow: none; }
+    body { background: white; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <span class="shield">🛡</span>
+  <div>
+    <div class="logo">Cyber Risk Assessment Checklist</div>
+    <div class="sub">PT Phillip Broker Asuransi Indonesia (PBAI) — Kuesioner Penilaian Risiko Cyber / Large Corp</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="metric">
+      <div class="mlabel">Risk Score</div>
+      <div class="mval" id="sc-score">—</div>
+      <div class="msub">dari 100</div>
+    </div>
+    <div class="metric">
+      <div class="mlabel">Risk Level</div>
+      <div class="mval" id="sc-level" style="font-size:15px;margin-top:5px">Belum diisi</div>
+      <div class="msub" id="sc-level-sub">—</div>
+    </div>
+    <div class="metric">
+      <div class="mlabel">Dijawab</div>
+      <div class="mval" id="sc-answered">0/138</div>
+      <div class="msub" id="sc-na">N/A: 0</div>
+    </div>
+    <div class="metric">
+      <div class="mlabel">Kelengkapan</div>
+      <div class="mval" id="sc-pct">0%</div>
+      <div class="msub">dari 138 pertanyaan</div>
+    </div>
+  </div>
+
+  <!-- Risk Bar -->
+  <div class="risk-panel">
+    <div class="risk-panel-top">
+      <span class="risk-title">Penilaian Risiko Keseluruhan</span>
+      <span class="risk-verdict" id="verdict-badge">—</span>
+    </div>
+    <div class="bar-wrap"><div class="bar-fill" id="mainBar"></div></div>
+    <div class="bar-labels"><span>0 — Sangat Tinggi</span><span>35</span><span>55</span><span>75 — Rendah — 100</span></div>
+    <div class="risk-sub" id="verdictSub">Isi kuesioner untuk melihat penilaian risiko otomatis.</div>
+  </div>
+
+  <!-- Export -->
+  <div class="export-bar">
+    <span>Export:</span>
+    <button class="btn-export" onclick="window.print()">🖨 Cetak / Print</button>
+    <button class="btn-export outline" onclick="exportJSON()">⬇ Download Jawaban (JSON)</button>
+    <button class="btn-export outline" onclick="resetAll()">↺ Reset Semua</button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('checklist',this)">📋 Kuesioner</button>
+    <button class="tab-btn" onclick="switchTab('breakdown',this)">📊 Breakdown Bobot</button>
+    <button class="tab-btn" onclick="switchTab('guide',this)">📖 Panduan Bobot</button>
+  </div>
+
+  <!-- Tab: Checklist -->
+  <div id="tab-checklist"></div>
+
+  <!-- Tab: Breakdown -->
+  <div id="tab-breakdown" style="display:none">
+    <div class="breakdown-wrap">
+      <h3>Skor per Sub Judul</h3>
+      <div id="breakdown-body"></div>
+      <div style="font-size:10px;color:var(--text-ter);margin-top:10px;text-align:right">Kolom kanan = bobot sub judul (%)</div>
+    </div>
+  </div>
+
+  <!-- Tab: Guide -->
+  <div id="tab-guide" style="display:none">
+    <div class="guide-panel">
+      <h3>Metodologi Pembobotan</h3>
+      <p>Bobot mencerminkan seberapa besar sub judul tersebut mempengaruhi <strong>probabilitas dan dampak klaim cyber</strong>. Sub judul yang langsung menentukan apakah serangan bisa dicegah dan bisnis bisa pulih mendapat bobot lebih tinggi.</p>
+      <p><strong>Scoring per pertanyaan:</strong><br>
+      Ya = 1.0 (kontrol ada) → risk score naik<br>
+      Tidak = 0.0 (kontrol tidak ada) → risk score turun<br>
+      N/A = dikecualikan dari kalkulasi</p>
+      <p><strong>Formula:</strong> Skor sub judul = (Jumlah Ya / Jumlah relevan) × 100. Skor total = Σ (skor sub judul × bobot) / Σ bobot yang terpakai.</p>
+      <table class="guide-table">
+        <tr><th>Kategori</th><th>Sub Judul</th><th>Bobot</th><th>Alasan</th></tr>
+        <tr><td><span class="badge bh">Tinggi</span></td><td>2.8 Keamanan Operasional</td><td>14%</td><td>Backup, patch, SIEM, malware — core cyber hygiene</td></tr>
+        <tr><td><span class="badge bh">Tinggi</span></td><td>2.5 Kontrol Akses</td><td>13%</td><td>Entry point tersering untuk serangan</td></tr>
+        <tr><td><span class="badge bh">Tinggi</span></td><td>2.12 Manajemen Insiden</td><td>12%</td><td>Menentukan kecepatan dan efektivitas respons breach</td></tr>
+        <tr><td><span class="badge bh">Tinggi</span></td><td>2.13 BCM</td><td>11%</td><td>Menentukan dampak finansial saat sistem down</td></tr>
+        <tr><td><span class="badge bm">Menengah</span></td><td>2.14 Kepatuhan</td><td>9%</td><td>Regulatory exposure dan audit trail</td></tr>
+        <tr><td><span class="badge bm">Menengah</span></td><td>2.9 Keamanan Komunikasi</td><td>8%</td><td>Firewall, DLP, segmentasi jaringan</td></tr>
+        <tr><td><span class="badge bm">Menengah</span></td><td>2.3 SDM</td><td>6%</td><td>Human factor — phishing, social engineering</td></tr>
+        <tr><td><span class="badge bm">Menengah</span></td><td>2.4 Manajemen Aset</td><td>6%</td><td>Visibilitas aset = fondasi kontrol lain</td></tr>
+        <tr><td><span class="badge bm">Menengah</span></td><td>2.11 Hubungan Supplier</td><td>6%</td><td>Third-party risk — sumber breach yang sering diabaikan</td></tr>
+        <tr><td><span class="badge bm">Menengah</span></td><td>2.2 Organisasi</td><td>5%</td><td>Governance dan accountability keamanan</td></tr>
+        <tr><td><span class="badge bm">Menengah</span></td><td>2.10 Pengembangan Sistem</td><td>5%</td><td>Secure SDLC dan hardening</td></tr>
+        <tr><td><span class="badge bl">Rendah</span></td><td>2.1 Kebijakan</td><td>4%</td><td>Fondasi formal, namun bukan kontrol teknis</td></tr>
+        <tr><td><span class="badge bl">Rendah</span></td><td>2.6 Kriptografi</td><td>4%</td><td>Penting tapi sudah tercakup di kontrol lain</td></tr>
+        <tr><td><span class="badge bl">Rendah</span></td><td>1. Informasi Perusahaan</td><td>3%</td><td>Informatif untuk underwriter, bukan kontrol</td></tr>
+        <tr><td><span class="badge bl">Rendah</span></td><td>2.7 Keamanan Fisik</td><td>3%</td><td>Relevan tapi dampak cyber lebih terbatas</td></tr>
+      </table>
+      <p style="margin-top:16px"><strong>Interpretasi Skor:</strong><br>
+      ≥ 75 = Risiko Rendah — layak underwriting standar<br>
+      55–74 = Risiko Sedang — perlu review, mungkin ada sub-limit tambahan<br>
+      35–54 = Risiko Tinggi — warranty, exclusion, atau premium loading<br>
+      &lt; 35 = Risiko Sangat Tinggi — pertimbangkan penolakan atau remediasi ketat</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    PT Phillip Broker Asuransi Indonesia (PBAI) &nbsp;|&nbsp; APPARINDO No. 054-1987/APPARINDO/2024 &nbsp;|&nbsp; Dokumen Internal — Bukan untuk Distribusi Publik
+  </div>
+</div>
+
+<script>
+var SECTIONS=[
+  {id:'s1',label:'1',title:'1. Informasi Perusahaan & Permintaan Asuransi',bobot:3,tier:'l',q:[
+    {id:'1.1',t:'Sektor industri sudah dipilih (checklist halaman 2)'},
+    {id:'1.2',t:'Turnover/pendapatan dan jejak regional sudah diisi'},
+    {id:'1.3',t:'Jenis dan jumlah data sensitif (PII, PCI, PHI, IP) sudah diidentifikasi'},
+    {id:'1.4',t:'Permintaan asuransi cyber (limit tahunan, periode polis, cakupan wilayah) sudah diisi'},
+    {id:'1.4b',t:'Jaminan yang diminta (First Party & Third Party coverage) sudah dipilih beserta deductible dan sub-limit'},
+    {id:'1.5a',t:'Perusahaan saat ini atau pernah memiliki asuransi cyber sebelumnya'},
+    {id:'1.5b',t:'Ada insurer yang pernah menolak atau tidak memperbarui polis serupa'},
+    {id:'1.6-1',t:'[Riwayat 3 tahun] Pernah mengalami insiden/klaim/tuntutan akses tidak sah atau penyalahgunaan jaringan'},
+    {id:'1.6-2',t:'[Riwayat 3 tahun] Pernah mengalami gangguan bisnis tidak terduga >4 jam akibat insiden siber'},
+    {id:'1.6-3',t:'[Riwayat 3 tahun] Pernah mengalami upaya atau tuntutan pemerasan pada sistem komputer'},
+    {id:'1.6-4',t:'[Riwayat 3 tahun] Pernah menerima klaim/keluhan terkait defamasi, pelanggaran privasi, pencurian informasi, atau malware'},
+    {id:'1.6-5',t:'[Riwayat 3 tahun] Pernah menjadi sasaran tindakan/penyelidikan pemerintah terkait pelanggaran hukum privasi'},
+    {id:'1.6-6',t:'[Riwayat 3 tahun] Mengetahui adanya penyebaran/kehilangan/pengungkapan PII'},
+    {id:'1.6-7',t:'[Riwayat 3 tahun] Mengetahui fakta/situasi yang berpotensi menimbulkan kerugian atau klaim cyber'},
+    {id:'1.7',t:'Kerangka hukum (GDPR, HIPAA) dan standar (PCI DSS, ISO 27001, NIST) yang berlaku sudah diidentifikasi'}
+  ]},
+  {id:'s21',label:'2.1',title:'2.1 Kebijakan Keamanan Informasi',bobot:4,tier:'l',q:[
+    {id:'2.1.1',t:'Kebijakan keamanan informasi formal sudah dikembangkan, diterapkan entity-wide, dan tersedia untuk semua karyawan/pihak eksternal terkait'},
+    {id:'2.1.2',t:'Kebijakan keamanan informasi ditinjau minimal tahunan dan disetujui manajemen senior'}
+  ]},
+  {id:'s22',label:'2.2',title:'2.2 Pengaturan Keamanan Informasi (Organisasi)',bobot:5,tier:'m',q:[
+    {id:'2.2.1',t:'Sudah menugaskan penanggung jawab keamanan informasi (CISO atau setara)'},
+    {id:'2.2.2',t:'Penanggung jawab keamanan TI rutin melapor ke manajemen senior/C-level'},
+    {id:'2.2.3',t:'Ada pemisahan tugas yang memadai untuk mengurangi risiko penyalahgunaan aset TI (disengaja maupun tidak)'},
+    {id:'2.2.4',t:'Ada proses pemantauan/audit akun pengguna dengan otorisasi bypass aturan pemisahan tugas'}
+  ]},
+  {id:'s23',label:'2.3',title:'2.3 Keamanan Sumber Daya Manusia',bobot:6,tier:'m',q:[
+    {id:'2.3.1',t:'Edukasi kesadaran keamanan informasi wajib (social engineering, privasi data, cyber threats terkini) minimal tahunan untuk karyawan dan kontraktor'},
+    {id:'2.3.2',t:'Pelatihan keamanan disesuaikan per peran spesifik (admin, privileged user, eksekutif, OT user)'},
+    {id:'2.3.3',t:'Dilakukan latihan/tes phishing untuk mengukur efektivitas pelatihan dan menargetkan kandidat yang perlu perbaikan'}
+  ]},
+  {id:'s24',label:'2.4',title:'2.4 Manajemen Aset',bobot:6,tier:'m',q:[
+    {id:'2.4.1',t:'Inventaris perangkat lunak (termasuk OS, solusi cloud) dan hardware yang terhubung ke jaringan selalu diperbarui'},
+    {id:'2.4.2',t:'Memiliki Configuration Management Database (CMDB) komprehensif: semua aset TI, cloud, dependensi, kekritisan, kepemilikan, versi patch'},
+    {id:'2.4.3',t:'Menggunakan solusi Mobile Device Management (MDM) untuk semua laptop dan smartphone'},
+    {id:'2.4.4',t:'Semua aset TI (termasuk cloud) dalam inventaris ditetapkan ke pemilik yang bertanggung jawab'},
+    {id:'2.4.5',t:'Pemilik aset memastikan klasifikasi dan perlindungan aset sepanjang siklus hidup (berdasarkan nilai, kekritisan, sensitivitas)'},
+    {id:'2.4.6',t:'Ada proses dekomisioning ketat (penghapusan data aman, update inventaris, log aktivitas, termasuk cloud)'},
+    {id:'2.4.7',t:'Informasi diklasifikasikan berdasarkan kerahasiaan'},
+    {id:'2.4.8',t:'Informasi diklasifikasikan berdasarkan kekritisan bisnis (integritas dan ketersediaan)'},
+    {id:'2.4.9',t:'Ada panduan cara menangani informasi rahasia'},
+    {id:'2.4.10',t:'Kepatuhan terhadap pedoman penanganan informasi rahasia ditinjau secara rutin'},
+    {id:'2.4.11',t:'Aturan disable media port dan restrict removable storage (USB, hard disk) dikelola secara terpusat'},
+    {id:'2.4.12',t:'Otorisasi diperlukan untuk media tidak terenkripsi yang dibawa keluar, disertai audit trail'}
+  ]},
+  {id:'s25',label:'2.5',title:'2.5 Kontrol Akses',bobot:13,tier:'h',q:[
+    {id:'2.5.1',t:'Kebijakan kontrol akses sudah diterapkan mencakup peran, hak, batasan (need-to-know, need-to-use)'},
+    {id:'2.5.2',t:'Audit log atas aktivitas manajemen akses (grant, change, revoke) disimpan'},
+    {id:'2.5.3',t:'Akses pengguna (karyawan, kontraktor) dibatasi berdasarkan kebutuhan bisnis dan least-privilege'},
+    {id:'2.5.4',t:'Ada solusi akses aman dari lokasi terpencil (VPN, Zero Trust)'},
+    {id:'2.5.5',t:'Ada solusi autentikasi aman melalui jaringan (IPSec, TLS, WPA2/WPA3 untuk wireless)'},
+    {id:'2.5.6',t:'Ada proses formal penyediaan akses untuk assign dan revoke hak akses'},
+    {id:'2.5.7',t:'Sistem IAM terpusat sudah diterapkan untuk assign dan revoke hak akses'},
+    {id:'2.5.8',t:'Pemilik aset meninjau hak akses minimal tahunan'},
+    {id:'2.5.9',t:'Local admin rights pada workstation dilarang untuk pengguna biasa'},
+    {id:'2.5.10',t:'Menggunakan Privileged Identity/Account Management (PIM/PAM) atau Privileged Access Workstation (PAW)'},
+    {id:'2.5.11',t:'Kebutuhan akun privileged ditinjau dan diverifikasi minimal tahunan'},
+    {id:'2.5.12',t:'Semua akses sistem, akun, dan hak terkait dicabut setelah pengguna diberhentikan (termasuk karyawan sementara, kontraktor, vendor)'},
+    {id:'2.5.13',t:'Hak akses yang tidak diperlukan dihapus setelah perubahan peran organisasi'},
+    {id:'2.5.14',t:'Ada prosedur pelaporan kejadian keamanan sesuai eskalasi jika terdeteksi upaya brute force atau pelanggaran log-on'},
+    {id:'2.5.15',t:'Sesi tidak aktif dihentikan otomatis setelah periode inaktivitas perangkat dan aplikasi'},
+    {id:'2.5.16',t:'Kata sandi kuat (panjang dan kompleks) dan MFA diterapkan berdasarkan kekritisan (remote/privileged access)'},
+    {id:'2.5.17',t:'Semua kata sandi default di perangkat jaringan (router, switch, IoT) sudah diubah'},
+    {id:'2.5.18',t:'Password manager yang disetujui disediakan untuk semua pengguna'},
+    {id:'2.5.19',t:'Akses pengguna ke program yang dapat override kontrol akses sistem/aplikasi dibatasi secara teknis'},
+    {id:'2.5.20',t:'Aktivitas program yang dapat override kontrol akses dicatat (logged)'}
+  ]},
+  {id:'s26',label:'2.6',title:'2.6 Kriptografi',bobot:4,tier:'l',q:[
+    {id:'2.6.1',t:'Enkripsi diterapkan pada semua jalur komunikasi eksternal (website, email, wireless)'},
+    {id:'2.6.2',t:'Enkripsi informasi sensitif/rahasia saat disimpan (on-premise, perangkat seluler, dan/atau cloud)'}
+  ]},
+  {id:'s27',label:'2.7',title:'2.7 Keamanan Fisik & Lingkungan',bobot:3,tier:'l',q:[
+    {id:'2.7.1',t:'Kontrol keamanan fisik dan lingkungan di fasilitas yang menampung aset kritikal ditinjau secara rutin'},
+    {id:'2.7.2',t:'Kontrol masuk tingkat lanjut sudah dipasang (biometrik, mantrap, CCTV 24/7, rekaman setiap akses)'}
+  ]},
+  {id:'s28',label:'2.8',title:'2.8 Keamanan Operasional',bobot:14,tier:'h',q:[
+    {id:'2.8.1',t:'Prosedur manajemen perubahan untuk proses bisnis, TI, dan sistem keamanan informasi sudah diterapkan'},
+    {id:'2.8.2',t:'Manajemen perubahan mencakup pengujian, failback scenario (rollback), dan komunikasi perubahan'},
+    {id:'2.8.3',t:'Ada ketentuan proses perubahan darurat untuk penyelesaian insiden secara cepat dan terkendali'},
+    {id:'2.8.4',t:'Lingkungan IT untuk pengembangan dan pengujian terpisah dari lingkungan produksi'},
+    {id:'2.8.5',t:'Developer menggunakan akun berbeda untuk development, testing, dan tugas sehari-hari'},
+    {id:'2.8.6',t:'Perlindungan malware selalu diperbarui di semua web proxy, email gateway, workstation, laptop, dan sistem berlaku'},
+    {id:'2.8.7',t:'Perlindungan malware menggunakan mekanisme deteksi heuristik dan perilaku tingkat lanjut (beyond signature-based)'},
+    {id:'2.8.8',t:'Ada proses backup rutin (minimal mingguan) di domain terpisah dari produksi (offsite atau cloud)'},
+    {id:'2.8.9',t:'Backup diuji secara rutin (minimal tahunan) untuk kelengkapan dan kemampuan restore dengan dampak minimal'},
+    {id:'2.8.10',t:'Beberapa generasi backup dibuat dan disimpan terpisah dari produksi'},
+    {id:'2.8.11',t:'SIEM sudah diterapkan untuk mengumpulkan dan menganalisis semua event keamanan dari seluruh aset IT'},
+    {id:'2.8.12',t:'Event log yang berisi data sensitif dan PII dilindungi setara dengan data produksi'},
+    {id:'2.8.13',t:'Ada kontrol teknis untuk memastikan log admin/privileged account tahan pembobolan (tamper proof)'},
+    {id:'2.8.14',t:'Proses instalasi perangkat lunak terpusat sudah diterapkan'},
+    {id:'2.8.15',t:'Aset end-of-life (legacy) yang masih digunakan dilindungi oleh kontrol mitigasi'},
+    {id:'2.8.16',t:'Proses patch management mencakup: penilaian kekritisan, verifikasi, testing, deployment dalam <1 bulan setelah rilis'},
+    {id:'2.8.17',t:'Critical security patch (CVSS >9.0) pada sistem internet-facing diinstal secara tepat waktu'},
+    {id:'2.8.18',t:'Vulnerability scan dilakukan secara rutin, kerentanan dianalisis dan ditindaklanjuti dengan tepat'},
+    {id:'2.8.19',t:'Pengguna dilarang secara teknis menginstal perangkat lunak tidak sah di perangkat mereka'},
+    {id:'2.8.20',t:'Ada whitelist perangkat lunak yang boleh dipasang pengguna dan administrator sistem'}
+  ]},
+  {id:'s29',label:'2.9',title:'2.9 Keamanan Komunikasi',bobot:8,tier:'m',q:[
+    {id:'2.9.1',t:'Semua jalur akses internet diamankan dengan firewall yang dikonfigurasi secara tepat'},
+    {id:'2.9.2',t:'Konfigurasi firewall ditinjau/diaudit minimal tahunan dan saat perubahan sistem'},
+    {id:'2.9.3',t:'Perubahan bisnis didukung oleh penyesuaian/pembaruan aturan firewall terkait risiko'},
+    {id:'2.9.4',t:'Teknologi Network Access Control (NAC) sudah diterapkan untuk mengakses jaringan nirkabel perusahaan'},
+    {id:'2.9.5',t:'Sistem yang dapat diakses internet (web/email server) terpisah secara fisik atau logis dari jaringan tepercaya'},
+    {id:'2.9.6',t:'Semua segmen jaringan berisiko tinggi (PoS, data sensitif, jaringan produksi kantor, OT) dipisahkan'},
+    {id:'2.9.8',t:'Metode autentikasi email diterapkan: SPF (Sender Policy Framework), DKIM, DMARC'},
+    {id:'2.9.9',t:'Perangkat lunak Data Loss Prevention (DLP) digunakan'},
+    {id:'2.9.10',t:'Ada proteksi yang sesuai dari lampiran berbahaya pada pesan elektronik masuk (misal sandboxing)'}
+  ]},
+  {id:'s210',label:'2.10',title:'2.10 Akuisisi, Pengembangan & Pemeliharaan Sistem',bobot:5,tier:'m',q:[
+    {id:'2.10.1',t:'Ada proses dokumentasi dan tinjauan persyaratan akuisisi/perubahan/pengembangan sistem yang mencakup kontrol keamanan yang memadai'},
+    {id:'2.10.2',t:'Proses mencakup pemberitahuan kepada semua operator (pengguna, SOC) mengenai tugas dan tanggung jawab baru'},
+    {id:'2.10.3',t:'Data dalam transit melalui jaringan publik diamankan (kerahasiaan, integritas, autentikasi pihak)'},
+    {id:'2.10.4',t:'Server web dilindungi dari serangan DDoS (misal dengan CDN provider)'},
+    {id:'2.10.5',t:'Semua sistem (server, klien, peralatan jaringan, DB, mail server) di-harden sesuai standar industri/rekomendasi pabrikan'},
+    {id:'2.10.6',t:'Ada secure coding baseline yang merinci persyaratan selama perencanaan, coding, review, dan maintenance perangkat lunak'},
+    {id:'2.10.7',t:'Developer dilatih secara rutin dalam teknik pemrograman aman dan code review'},
+    {id:'2.10.8',t:'Uji keamanan/code analysis dilakukan selama development, sebelum go-live, dan setelah perubahan sistem'},
+    {id:'2.10.9',t:'Data pengujian yang bersifat rahasia diberi kontrol keamanan setara dengan data rahasia pada sistem produksi'}
+  ]},
+  {id:'s211',label:'2.11',title:'2.11 Hubungan Supplier',bobot:6,tier:'m',q:[
+    {id:'2.11.1',t:'Ada proses identifikasi, kategorisasi, dan penilaian keamanan informasi supplier pada tahap due diligence'},
+    {id:'2.11.2',t:'Kontrol keamanan untuk menangani akses supplier terhadap informasi perusahaan sudah diidentifikasi dan diwajibkan dalam kebijakan'},
+    {id:'2.11.3',t:'Perjanjian dengan supplier mensyaratkan tingkat keamanan yang sepadan dengan standar internal'},
+    {id:'2.11.4',t:'Perjanjian dengan supplier kritis bisnis ditinjau dan diperbarui secara berkala'},
+    {id:'2.11.5',t:'Hak audit pihak ketiga ditetapkan dalam perjanjian kontrak'},
+    {id:'2.11.6',t:'Ada proses pemantauan berkelanjutan supplier terhadap peristiwa keamanan (pelanggaran data, kerentanan baru, serangan siber)'},
+    {id:'2.11.7',t:'Penilaian keamanan atau laporan/sertifikat audit independen (SOC 2) supplier diperoleh untuk jaminan postur keamanan'},
+    {id:'2.11.8',t:'Kontrak dengan supplier mencakup hold harmless/waiver of liability jika supplier gagal melindungi data sensitif'}
+  ]},
+  {id:'s212',label:'2.12',title:'2.12 Manajemen Insiden Keamanan Informasi',bobot:12,tier:'h',q:[
+    {id:'2.12.1',t:'Rencana penanganan insiden keamanan informasi ada, ditinjau, dan diuji minimal tahunan'},
+    {id:'2.12.2',t:'Orang atau tim bertanggung jawab untuk incident response sudah ditunjuk'},
+    {id:'2.12.3a',t:'Ada retainer outsourcing forensik digital/incident response untuk dukungan saat insiden besar'},
+    {id:'2.12.3b',t:'Karyawan dan kontraktor dilatih untuk mengidentifikasi kejadian keamanan dan melaporkannya secara tepat waktu'},
+    {id:'2.12.4',t:'Semua peristiwa keamanan informasi didokumentasikan, ditindaklanjuti, dan dilaporkan dalam solusi terpusat (misal SIEM)'},
+    {id:'2.12.5',t:'Prosedur eskalasi (misal SOC) untuk insiden keamanan informasi sudah ditetapkan'},
+    {id:'2.12.6',t:'Bukti dikumpulkan segera setelah insiden diketahui dan disimpan dalam lingkungan tamper-proof'},
+    {id:'2.12.7',t:'Manajemen secara rutin diberitahu mengenai insiden penting'},
+    {id:'2.12.8',t:'Pengetahuan dari resolusi insiden digunakan untuk mengurangi kemungkinan/dampak insiden di masa depan'},
+    {id:'2.12.9',t:'Jenis, volume, dan biaya insiden keamanan informasi dihitung dan dipantau'}
+  ]},
+  {id:'s213',label:'2.13',title:'2.13 Business Continuity Management (BCM)',bobot:11,tier:'h',q:[
+    {id:'2.13.1',t:'Skenario siber yang dapat berdampak pada kelangsungan bisnis ditinjau minimal tahunan (misal dalam BIA)'},
+    {id:'2.13.2',t:'BIA mencakup analisis waktu sebelum outage pada sistem kritikal berdampak material pada pendapatan'},
+    {id:'2.13.3',t:'Recovery Time Objectives (RTO) dan Recovery Point Objectives (RPO) ditetapkan berdasarkan kekritisan sistem/aplikasi'},
+    {id:'2.13.4',t:'Ada rencana BCM dan Disaster Recovery (DR) yang mencakup skenario siber'},
+    {id:'2.13.5',t:'Personel dengan tanggung jawab, wewenang, dan kompetensi untuk mengelola insiden sudah dinominasikan'},
+    {id:'2.13.5b',t:'Rencana kesinambungan keamanan informasi (BCM & DR) ditinjau dan diperbarui validitasnya minimal tahunan'},
+    {id:'2.13.6',t:'Proses dan konten rencana diuji/dilatih (Table-Top atau Red Teaming) minimal tahunan'},
+    {id:'2.13.7',t:'Hasil uji kontinuitas ditinjau, didokumentasikan, dilaporkan ke manajemen, dan rencana direvisi berdasarkan lessons learned'},
+    {id:'2.13.8',t:'Fasilitas pemrosesan informasi diterapkan dengan redundansi'},
+    {id:'2.13.9',t:'Pengujian redundansi dilakukan minimal tahunan untuk memastikan failover berfungsi sebagaimana mestinya'}
+  ]},
+  {id:'s214',label:'2.14',title:'2.14 Kepatuhan (Compliance)',bobot:9,tier:'m',q:[
+    {id:'2.14.1',t:'Prosedur permanen untuk mematuhi semua persyaratan undang-undang, peraturan, dan kontrak terkait privasi sudah diterapkan'},
+    {id:'2.14.2',t:'Fungsi kepatuhan dengan wewenang melapor ke C-level atau setara sudah ada'},
+    {id:'2.14.3',t:'Proses dan prosedur untuk retensi, penyimpanan, penanganan, dan pembuangan catatan/informasi sudah diterapkan'},
+    {id:'2.14.4',t:'Ada jadwal terdokumentasi untuk identifikasi catatan, masa retensi, dan pembuangan yang aman'},
+    {id:'2.14.5',t:'Penanggung jawab privasi data (DPO atau setara) sudah ditugaskan untuk kepatuhan regulasi privasi'},
+    {id:'2.14.6',t:'Kebijakan privasi dan perlindungan Personally Identifiable Information (PII) sudah dikembangkan dan diterapkan'},
+    {id:'2.14.7',t:'PII hanya ditangani sebagaimana diizinkan oleh subjek data'},
+    {id:'2.14.8',t:'Kontrol kriptografi selalu diperbarui dan sejalan dengan perjanjian/undang-undang yang relevan'},
+    {id:'2.14.9',t:'Tinjauan/audit rutin dilakukan untuk mengevaluasi kepatuhan terhadap kebijakan, standar, dan regulasi keamanan informasi'},
+    {id:'2.14.10',t:'Pemilik aset diberi tanggung jawab memastikan temuan dari tinjauan kepatuhan sudah diperbaiki'},
+    {id:'2.14.11',t:'VAPT (Vulnerability Assessment & Penetration Testing) sistem kritikal dilakukan secara rutin dan setelah perubahan sistem'},
+    {id:'2.14.12',t:'Audit keamanan informasi sejalan dengan framework (ISO 27001, NIST 800-53, ISF, dll.) dilakukan minimal tahunan'}
+  ]}
+];
+
+var answers = {};
+
+function barColor(pct){
+  if(pct>=75) return '#639922';
+  if(pct>=55) return '#BA7517';
+  if(pct>=35) return '#D85A30';
+  return '#A32D2D';
+}
+
+function calcAll(){
+  var answered=0, naCount=0, wSum=0, wUsed=0;
+  var secData=[];
+  SECTIONS.forEach(function(sec){
+    var ya=0,tidak=0,na=0;
+    sec.q.forEach(function(q){
+      var a=answers[q.id];
+      if(a==='ya') ya++;
+      else if(a==='tidak') tidak++;
+      else if(a==='na') na++;
+    });
+    var rel=ya+tidak;
+    var score=rel>0?Math.round(ya/rel*100):null;
+    answered+=rel; naCount+=na;
+    if(score!==null){wSum+=score*sec.bobot; wUsed+=sec.bobot;}
+    secData.push({sec:sec,ya:ya,tidak:tidak,na:na,score:score});
+  });
+  var total=wUsed>0?Math.round(wSum/wUsed):null;
+  return{total:total,answered:answered,naCount:naCount,secData:secData};
+}
+
+function updateUI(){
+  var r=calcAll();
+  var diisi=r.answered+r.naCount;
+  document.getElementById('sc-answered').textContent=diisi+'/138';
+  document.getElementById('sc-na').textContent='N/A: '+r.naCount;
+  document.getElementById('sc-pct').textContent=Math.round(diisi/138*100)+'%';
+
+  r.secData.forEach(function(d){
+    var pf=document.getElementById('pf-'+d.sec.id);
+    var se=document.getElementById('se-'+d.sec.id);
+    if(pf){
+      var p=d.score!==null?d.score:0;
+      pf.style.width=p+'%';
+      pf.style.background=d.score!==null?barColor(d.score):'#ccc';
+    }
+    if(se){
+      se.textContent=d.score!==null?d.score+'%':'—';
+      se.style.color=d.score!==null?barColor(d.score):'#999';
+    }
+  });
+
+  if(r.total===null){
+    document.getElementById('sc-score').textContent='—';
+    document.getElementById('sc-level').textContent='Belum diisi';
+    document.getElementById('sc-level-sub').textContent='—';
+    document.getElementById('mainBar').style.width='0%';
+    document.getElementById('verdict-badge').textContent='—';
+    document.getElementById('verdict-badge').style.color='#999';
+    document.getElementById('verdictSub').textContent='Isi kuesioner untuk melihat penilaian risiko otomatis.';
+    return;
+  }
+
+  document.getElementById('sc-score').textContent=r.total;
+  document.getElementById('mainBar').style.width=r.total+'%';
+  document.getElementById('mainBar').style.background=barColor(r.total);
+  document.getElementById('verdict-badge').style.color=barColor(r.total);
+
+  var lvl,sub,vt;
+  if(r.total>=75){
+    lvl='Risiko Rendah'; sub='Layak underwriting';
+    vt='Security posture baik — kandidat layak untuk underwriting standar. Kontrol keamanan memadai. Underwriter dapat mempertimbangkan pricing kompetitif.';
+  } else if(r.total>=55){
+    lvl='Risiko Sedang'; sub='Perlu review';
+    vt='Security posture cukup — beberapa area kontrol masih lemah. Underwriter mungkin meminta klarifikasi atau menerapkan sub-limit tambahan.';
+  } else if(r.total>=35){
+    lvl='Risiko Tinggi'; sub='Elevated risk';
+    vt='Security posture lemah — banyak kontrol fundamental belum ada. Pertimbangkan warranty, exclusion, atau premium loading.';
+  } else {
+    lvl='Risiko Sangat Tinggi'; sub='Akseptansi bermasalah';
+    vt='Security posture sangat lemah — kontrol dasar tidak terpenuhi. Underwriter perlu mempertimbangkan penolakan atau persyaratan remediasi ketat.';
+  }
+  document.getElementById('sc-level').textContent=lvl;
+  document.getElementById('sc-level-sub').textContent=sub;
+  document.getElementById('verdict-badge').textContent=lvl+' ('+r.total+')';
+  document.getElementById('verdictSub').textContent=vt;
+}
+
+function clickAnswer(qid, val){
+  if(answers[qid]===val){ delete answers[qid]; }
+  else { answers[qid]=val; }
+  var btns=document.querySelectorAll('[data-qid="'+qid+'"]');
+  btns.forEach(function(b){
+    b.className='btn-ans';
+    if(answers[qid] && b.getAttribute('data-val')===answers[qid]){
+      if(answers[qid]==='ya') b.className='btn-ans btn-ya-active';
+      else if(answers[qid]==='tidak') b.className='btn-ans btn-tidak-active';
+      else b.className='btn-ans btn-na-active';
+    }
+  });
+  updateUI();
+}
+
+function toggleSec(id){
+  var b=document.getElementById('bd-'+id);
+  var c=document.getElementById('cv-'+id);
+  if(b.classList.contains('open')){b.classList.remove('open');c.classList.remove('open');}
+  else{b.classList.add('open');c.classList.add('open');}
+}
+
+function switchTab(tab,btn){
+  ['checklist','breakdown','guide'].forEach(function(t){
+    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  if(tab==='breakdown') renderBreakdown();
+}
+
+function renderBreakdown(){
+  var r=calcAll();
+  var html='';
+  r.secData.forEach(function(d){
+    var w=d.score!==null?d.score:0;
+    var bc=d.score!==null?barColor(d.score):'#ccc';
+    var lbl=d.score!==null?d.score+'%':'—';
+    var shortT=d.sec.title.replace(/^\S+\s/,'');
+    html+='<div class="sbr"><div class="sbr-label" title="'+d.sec.title+'">'+shortT+'</div>'
+      +'<div class="sbr-outer"><div class="sbr-inner" style="width:'+w+'%;background:'+bc+'"></div></div>'
+      +'<div class="sbr-pct">'+lbl+'</div>'
+      +'<div class="sbr-w">'+d.sec.bobot+'%</div></div>';
+  });
+  document.getElementById('breakdown-body').innerHTML=html;
+}
+
+function exportJSON(){
+  var r=calcAll();
+  var out={
+    tanggal: new Date().toISOString().slice(0,10),
+    score_total: r.total,
+    total_dijawab: r.answered+r.naCount,
+    jawaban: answers,
+    skor_per_seksi: {}
+  };
+  r.secData.forEach(function(d){out.skor_per_seksi[d.sec.title]={score:d.score,bobot:d.sec.bobot,ya:d.ya,tidak:d.tidak,na:d.na};});
+  var blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='cyber_risk_assessment_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+
+function resetAll(){
+  if(!confirm('Reset semua jawaban? Tindakan ini tidak dapat dibatalkan.')) return;
+  answers={};
+  document.querySelectorAll('.btn-ans').forEach(function(b){b.className='btn-ans';});
+  updateUI();
+}
+
+function buildChecklist(){
+  var el=document.getElementById('tab-checklist');
+  var html='';
+  SECTIONS.forEach(function(sec){
+    var tc=sec.tier==='h'?'bh':sec.tier==='m'?'bm':'bl';
+    var tl=sec.tier==='h'?'Bobot Tinggi':sec.tier==='m'?'Bobot Menengah':'Bobot Rendah';
+    html+='<div class="section-card">'
+      +'<div class="sec-progress"><div class="sec-progress-fill" id="pf-'+sec.id+'" style="width:0%"></div></div>'
+      +'<div class="sec-header" onclick="toggleSec(\''+sec.id+'\')">'
+        +'<div class="sec-left">'
+          +'<span class="sec-title">'+sec.title+'</span>'
+          +'<span class="badge '+tc+'">'+tl+' · '+sec.bobot+'%</span>'
+          +'<span class="badge bl">'+sec.q.length+' pertanyaan</span>'
+        +'</div>'
+        +'<span class="sec-score" id="se-'+sec.id+'">—</span>'
+        +'<span class="chevron" id="cv-'+sec.id+'">▾</span>'
+      +'</div>'
+      +'<div class="sec-body" id="bd-'+sec.id+'">';
+    sec.q.forEach(function(q){
+      html+='<div class="q-row">'
+        +'<span class="q-id">'+q.id+'</span>'
+        +'<span class="q-text">'+q.t+'</span>'
+        +'<div class="btn-group">'
+          +'<button class="btn-ans" data-qid="'+q.id+'" data-val="ya" onclick="clickAnswer(\''+q.id+'\',\'ya\')">Ya</button>'
+          +'<button class="btn-ans" data-qid="'+q.id+'" data-val="tidak" onclick="clickAnswer(\''+q.id+'\',\'tidak\')">Tidak</button>'
+          +'<button class="btn-ans" data-qid="'+q.id+'" data-val="na" onclick="clickAnswer(\''+q.id+'\',\'na\')">N/A</button>'
+        +'</div>'
+      +'</div>';
+    });
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+buildChecklist();
+updateUI();
+</script>
+</body>
+</html>
